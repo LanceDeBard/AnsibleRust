@@ -1,0 +1,2 @@
+# AnsibleRust
+Setup Rust
