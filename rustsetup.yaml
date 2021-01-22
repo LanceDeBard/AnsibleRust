@@ -1,0 +1,40 @@
+---
+- name: Setup rust and get it working
+  hosts: otaserver
+  vars:
+    - user: lance
+  tasks:
+    - name: Install rustup toolchain manager
+      package:
+        name: "{{ item }}"
+        state: latest
+      with_items:
+        - emacs
+        - vim
+        - gcc
+
+    - name: Find if rustup is downloaded
+      stat:
+        path: /tmp/sh.rustup.rs
+      register: rustup
+
+    - name: Download rustup script
+      get_url:
+        url: https://sh.rustup.rs
+        dest: /tmp/sh.rustup.rs
+      when: rustup.stat.exists == False
+
+    - name: Run the rustup installer
+      become_user: "{{ user }}"
+      shell:
+        cmd: sh /tmp/sh.rustup.rs -y
+        creates: /home/lance/.rustup
+
+    - name: Add rust update to crontab
+      cron:
+        hour: "0"
+        minute: "0"
+        state: present
+        user: "{{ user }}"
+        name: "Update Rust"
+        job: "rustup update"
